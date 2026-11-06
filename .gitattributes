@@ -1,0 +1,3 @@
+# Store and check out text with LF on every platform, so run.sh works on Linux
+# and gofmt's checks agree between Windows and CI.
+* text=auto eol=lf

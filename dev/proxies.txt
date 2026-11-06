@@ -1,0 +1,6 @@
+# Sample data.
+# 18082 has nothing listening, so it fails with connection refused.
+127.0.0.1:18082
+# 18083 and 18084 work.
+http://127.0.0.1:18083
+http://127.0.0.1:18084

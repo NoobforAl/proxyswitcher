@@ -1,0 +1,5 @@
+# Your own proxies. Copy to personal_proxies.yaml (gitignored) and never commit
+# real credentials. Supported schemes: http, https, socks5.
+personal_proxies:
+  - url: "http://user:pass@203.0.113.10:8080"
+  - url: "socks5://user:pass@203.0.113.11:1080"

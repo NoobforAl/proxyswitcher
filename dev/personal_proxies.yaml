@@ -1,0 +1,5 @@
+# Sample data. This proxy gets the highest starting score and answers 403 to
+# everything, so the first request always has to switch away from it. The
+# password is a placeholder that shows credentials are removed from the logs.
+personal_proxies:
+  - url: "http://dev:dev-password@127.0.0.1:18081"

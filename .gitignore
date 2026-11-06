@@ -1,0 +1,14 @@
+# Real configs can hold proxy credentials. These are anchored to the project
+# root so the sample data in dev/ stays tracked.
+/proxyswitcher.yaml
+/personal_proxies.yaml
+/*proxies*.txt
+
+# Build output
+/proxyswitcher
+/proxyswitcher.exe
+*.test
+*.out
+
+# Lab reports
+test/lab/out/

@@ -1,0 +1,119 @@
+# Example proxyswitcher config. Copy it to proxyswitcher.yaml (gitignored).
+# Every value below is the default unless a comment says otherwise. Any setting
+# with a PROXYSWITCHER_* variable in the README can also be set there, and the
+# variable wins over this file.
+
+# scanner: for ZAP, Burp, sqlmap and other security tools. Requests reach the
+#   upstream as the tool sent them, and are never repeated once they may have
+#   reached the target. It only switches when a proxy itself fails.
+# scraper: for crawlers. Also switches on 403, 429 and 5xx for GET, HEAD and
+#   OPTIONS, at the cost of Go's HTTP parsing and normalization.
+profile: scanner
+
+# Address the local forward proxy binds to.
+listen: "127.0.0.1:8899"
+
+# The forward proxy has no client authentication. A non-loopback listen address
+# is refused unless this is true, because it would run an open proxy.
+allow_remote: false
+
+# Optional address for GET /healthz and GET /status, so scripts can wait until
+# the proxy is usable. Default: unset, which turns them off.
+# admin_listen: "127.0.0.1:8898"
+
+# debug, info, warn or error.
+log_level: info
+
+# Send the first attempt without a proxy, and use the pool only on failure. It
+# exposes your real IP to the target.
+direct_first: false
+
+# Go direct when no proxy is available, instead of failing the request. It
+# exposes your real IP to the target.
+fallback_direct: false
+
+# Total tries per request, including a direct first attempt.
+max_attempts: 5
+
+# Concurrent client connections. Past this, new connections wait.
+max_connections: 4096
+
+# Keep using the proxy that last worked for a site until it fails, so logins keep
+# the same exit IP. Default: true for scanner, false for scraper.
+# sticky: true
+
+# Exit at startup when the pool is empty, rather than answering every request
+# with an error. Default: true for scanner, false for scraper.
+# require_proxies: true
+
+# How long a site that failed through several proxies gets one attempt per
+# request, so a dead site does not multiply traffic. Negative disables it.
+target_backoff: 30s
+
+# How long to wait while connecting through one proxy, before trying another.
+# Lower it for public proxy lists, where many proxies hang.
+dial_timeout: 15s
+
+# Closes relayed connections after this long with no traffic. Negative disables.
+idle_timeout: 10m
+
+# Scraper profile only. For both, negative disables the limit.
+# response_timeout: 30s   # wait for a response from one proxy
+# request_timeout: 60s    # across all attempts, until a response starts
+
+# Scraper profile only. Responses that make it try another proxy, and the methods
+# that are safe to send again. Scanner mode never switches on a status.
+# retry_status: [403, 429, 500, 502, 503, 504]
+# retry_methods: [GET, HEAD, OPTIONS]
+
+pool:
+  # How long a proxy is skipped once its score drops below blacklist_threshold.
+  cooldown: 30m
+  # How long a proxy is skipped for one site that blocked it. Default: cooldown.
+  # site_cooldown: 30m
+  # Distinct sites that must reject a proxy before it counts against the proxy's
+  # global score. One strict site cannot cost a proxy its place in the pool.
+  global_failure_after_sites: 3
+  # Upper limit for a proxy's score. Personal proxies start at 3, public at 1.
+  max_score: 5
+  blacklist_threshold: 0
+  # How often every source is reloaded. Existing scores are kept.
+  refresh_interval: 1h
+  # A proxy is removed until restart when either rule matches:
+  #  - more than evict_after_failures failures, with at most
+  #    evict_max_successes successes
+  #  - more than evict_after_failures attempts, with a success rate at or below
+  #    evict_max_success_rate
+  evict_after_failures: 10
+  evict_max_successes: 1
+  evict_max_success_rate: 0.1
+
+sources:
+  # Your own proxies, preferred over public ones. Default: unset.
+  # Format: see personal_proxies.example.yaml.
+  personal_file: "personal_proxies.yaml"
+  # Plain-text list, one "host:port" or full URL per line. Default: unset.
+  list_file: ""
+  # Fetches the ProxyScrape free-list API.
+  proxyscrape_enabled: false
+  databay:
+    enabled: false
+    base_url: "https://databay.com/api/v1/proxy-list"
+    # The API key comes only from the DATABAY_API_KEY environment variable.
+    # The endpoint answered 401 without a key when last tested, in November 2026.
+
+# `enabled` probes every proxy once at startup and removes the ones that fail.
+# `proxyswitcher check` runs the same probes whether or not it is enabled.
+health_check:
+  enabled: false
+  # Pause between startup probes, so the sweep never fires a burst.
+  delay: 500ms
+  timeout: 8s
+  target_url: "http://example.com/"
+  # Fetched over a CONNECT tunnel with full certificate checks, so a proxy that
+  # cannot open tunnels, or that intercepts TLS, fails.
+  https_target_url: "https://example.com/"
+  skip_https: false
+  # Text that must appear in each probe's response, so a proxy injecting its own
+  # page fails. Default: unset, where any status under 500 passes.
+  # expect_body: "Example Domain"

@@ -1,0 +1,8 @@
+# Sample config for `make dev`. Every proxy here is a fake that cmd/devstack
+# runs locally, so nothing leaves this machine. The profile comes from devstack's
+# -profile flag.
+listen: "127.0.0.1:8899"
+
+sources:
+  personal_file: "dev/personal_proxies.yaml"
+  list_file: "dev/proxies.txt"

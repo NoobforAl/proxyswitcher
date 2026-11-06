@@ -1,0 +1,14 @@
+id: lab-reflected-input
+info:
+  name: Reflected input on the lab target
+  author: proxyswitcher-lab
+  severity: medium
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/search?q=<labmarker>"
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "<labmarker>"

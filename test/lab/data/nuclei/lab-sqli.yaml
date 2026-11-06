@@ -1,0 +1,18 @@
+id: lab-sql-error
+info:
+  name: SQL error on the lab target
+  author: proxyswitcher-lab
+  severity: high
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/item?id=1'"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 500
+      - type: word
+        part: body
+        words:
+          - "SQL error"

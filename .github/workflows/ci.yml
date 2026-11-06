@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Monthly, so newly published vulnerabilities are caught without a code change.
+    - cron: "0 6 1 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Tests with the race detector
+        run: go test -race -count=1 -timeout 300s ./...
+      - name: Sample requests through both profiles
+        run: make dev-check
+      - name: Lab programs build
+        working-directory: test/lab
+        run: go build ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install tools
+        run: make tools
+      - name: go.mod and go.sum are tidy
+        run: go mod tidy -diff
+      - name: Formatting
+        run: golangci-lint fmt --diff ./...
+      - name: go fix has nothing to change
+        run: go fix -diff ./...
+      - name: go vet
+        run: make vet
+      - name: golangci-lint
+        run: make lint
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install tools
+        run: make tools
+      - name: gosec and govulncheck
+        run: make security

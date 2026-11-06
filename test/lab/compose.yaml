@@ -1,0 +1,73 @@
+# The lab network is internal: containers on it have no route to the internet,
+# so a scanner here cannot reach a real site, even by mistake. The only target is
+# the fake site below, and the upstream proxies refuse every other host.
+name: proxyswitcher-lab
+
+networks:
+  lab:
+    internal: true
+
+x-lab: &lab
+  image: proxyswitcher-lab
+  build:
+    context: ../..
+    dockerfile: test/lab/Dockerfile
+  networks: [lab]
+
+x-tools: &tools
+  networks: [lab]
+  profiles: [tools]
+  volumes:
+    - ./data:/data:ro
+    - ./out:/out
+
+services:
+  target:
+    <<: *lab
+    command: [target]
+
+  proxy-a:
+    <<: *lab
+    command: [upstream]
+
+  proxy-b:
+    <<: *lab
+    command: [upstream]
+
+  proxyswitcher:
+    <<: *lab
+    command: [proxyswitcher, serve, -config, /data/scanner.yaml]
+    volumes:
+      - ./data:/data:ro
+    depends_on: [target, proxy-a, proxy-b]
+
+  proxyswitcher-scraper:
+    <<: *lab
+    command: [proxyswitcher, serve, -config, /data/scraper.yaml]
+    volumes:
+      - ./data:/data:ro
+    depends_on: [target, proxy-a, proxy-b]
+
+  tools:
+    <<: *tools
+    image: proxyswitcher-lab-tools
+    build:
+      context: .
+      dockerfile: Dockerfile.tools
+
+  nuclei:
+    <<: *tools
+    image: projectdiscovery/nuclei:v3.3.5
+
+  zap:
+    <<: *tools
+    image: zaproxy/zap-stable:2.16.1
+    volumes:
+      - ./out:/zap/wrk
+
+  dastardly:
+    <<: *tools
+    image: public.ecr.aws/portswigger/dastardly:latest
+    environment:
+      BURP_START_URL: http://target:8080/
+      BURP_REPORT_FILE_PATH: /out/dastardly.xml

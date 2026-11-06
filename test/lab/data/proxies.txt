@@ -1,0 +1,2 @@
+http://proxy-a:3128
+http://proxy-b:3128

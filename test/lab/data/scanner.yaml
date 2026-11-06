@@ -1,0 +1,11 @@
+# allow_remote is only safe here because the lab network has no outside access.
+profile: scanner
+listen: "0.0.0.0:8899"
+allow_remote: true
+admin_listen: "0.0.0.0:8898"
+log_level: info
+sources:
+  list_file: /data/proxies.txt
+health_check:
+  target_url: http://target:8080/
+  skip_https: true

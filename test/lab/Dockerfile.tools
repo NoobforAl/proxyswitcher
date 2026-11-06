@@ -1,0 +1,8 @@
+# The command-line tools the lab runs through proxyswitcher.
+FROM golang:1.27 AS build
+ENV CGO_ENABLED=0
+RUN go install github.com/ffuf/ffuf/v2@v2.1.0
+
+FROM python:3.12-alpine
+RUN pip install --no-cache-dir sqlmap==1.8.11 scrapy && apk add --no-cache curl
+COPY --from=build /go/bin/ffuf /usr/local/bin/ffuf
