@@ -1,0 +1,59 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove proxy credentials, real IPs and target hostnames before you post. Report security problems privately via Security → Report a vulnerability.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. proxyswitcher serve with the config below
+        2. sqlmap --proxy http://127.0.0.1:8899 ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile
+      options: [scanner, scraper, library (switcher.Transport)]
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Tool and version
+      placeholder: ZAP 2.16, sqlmap 1.9, Scrapy 2.13, ...
+  - type: input
+    id: version
+    attributes:
+      label: proxyswitcher version or commit
+      placeholder: git rev-parse --short HEAD
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS and Go version
+      placeholder: Ubuntu 24.04, go1.27.4
+  - type: textarea
+    id: config
+    attributes:
+      label: Config (credentials removed)
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      render: text

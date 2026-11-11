@@ -183,6 +183,8 @@ By default the library switches on 403, 429 and 5xx, and only repeats GET, HEAD 
 
 | Command | What it does |
 |---|---|
+| `make ci` | Runs every check the CI workflow runs: tidy, format, `go fix`, vet, lint, race tests, `dev-check`, lab build and security. |
+| `make build` | Builds the `proxyswitcher` binary. |
 | `make test` | Runs all tests. They use local fake proxies only and don't touch the internet. |
 | `make test-race` | Runs all tests with the race detector, in Docker, because it needs a C compiler. |
 | `make fix` | Runs `gofix`, `format`, `vet`, `lint-fix` and `security`, in that order. |
@@ -194,6 +196,8 @@ By default the library switches on 403, 429 and 5xx, and only repeats GET, HEAD 
 | `make lab` | Runs real scanners in Docker against a fake target. See below. Add `LAB="ffuf sqlmap"` to run only those steps. |
 | `make lab-clean` | Stops the lab and removes its containers and network. |
 | `make tools` | Installs golangci-lint, gosec and govulncheck. |
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 `make dev` needs no real proxies. It starts fake ones locally: one that blocks everything, two that work, and a sample address with nothing listening. Nothing leaves your machine.
 

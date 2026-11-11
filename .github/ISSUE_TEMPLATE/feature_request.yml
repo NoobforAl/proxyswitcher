@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        proxyswitcher is for reliability during authorized testing. Requests for features that evade detection (fingerprint spoofing, WAF or CAPTCHA bypass) will be closed.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what stops you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options: [scanner profile, scraper profile, proxy sources, health checks, library API, config, docs, tooling]
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

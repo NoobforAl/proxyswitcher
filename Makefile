@@ -4,10 +4,12 @@ GO_TEST_FLAGS := -count=1 -timeout 180s
 RACE_IMAGE    := golang:1.27
 PROFILE       ?= scraper
 
-.PHONY: help test test-race fix gofix format vet lint lint-fix security dev dev-check lab lab-clean tools
+.PHONY: help build ci check-tidy check-format check-gofix lab-build test test-race fix gofix format vet lint lint-fix security dev dev-check lab lab-clean tools
 
 help:
 	@echo "Targets:"
+	@echo "  build       build the proxyswitcher binary"
+	@echo "  ci          run every check the CI workflow runs (needs Docker for test-race)"
 	@echo "  test        run all tests"
 	@echo "  test-race   run all tests with the race detector, in Docker (it needs a C compiler)"
 	@echo "  fix         gofix + format + vet + lint-fix + security"
@@ -24,6 +26,24 @@ help:
 	@echo "              LAB="ffuf sqlmap" runs only those steps"
 	@echo "  lab-clean   stop the lab and remove its containers and network"
 	@echo "  tools       install golangci-lint, gosec and govulncheck"
+
+build:
+	go build -o proxyswitcher$(if $(filter Windows_NT,$(OS)),.exe) ./cmd/proxyswitcher
+
+# Mirrors .github/workflows/ci.yml, so a green `make ci` means a green CI run.
+ci: check-tidy check-format check-gofix vet lint test-race dev-check lab-build security
+
+check-tidy:
+	go mod tidy -diff
+
+check-format:
+	golangci-lint fmt --diff ./...
+
+check-gofix:
+	go fix -diff ./...
+
+lab-build:
+	cd test/lab && go build ./...
 
 test:
 	go test $(GO_TEST_FLAGS) ./...
