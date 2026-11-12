@@ -87,9 +87,11 @@ reviews:
         mode: error
         instructions: |
           Fail if the PR changes internal/forward/ or switcher/ so that, in
-          scanner mode, a request that may have reached the target is resent,
-          or a plain-HTTP request is rewritten, and it does not add a test
-          for that behaviour. Pass if the PR does not touch this behaviour.
+          scanner mode, a request that may have reached the target is
+          resent, or a plain-HTTP request is rewritten. This fails
+          regardless of whether the PR adds a test. Pass if the PR does not
+          change this behaviour. (The test requirement for changes in this
+          area is covered by the internal/forward/** path instructions.)
       - name: "Tests stay offline"
         mode: warning
         instructions: |
