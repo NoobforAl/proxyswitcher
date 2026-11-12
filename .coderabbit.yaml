@@ -1,0 +1,151 @@
+# CodeRabbit configuration. Schema: https://coderabbit.ai/integrations/schema.v2.json
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_filters:
+    - "!go.sum"
+    - "!**/go.sum"
+    # The lab target is deliberately vulnerable (SQLi, XSS). Don't scan it.
+    - "!test/lab/target/**"
+
+  path_instructions:
+    - path: "switcher/**"
+      instructions: |
+        Public library. Flag any breaking change to exported identifiers.
+        Proxy URLs carry user:pass: never log, print, wrap into errors, or
+        return them unredacted (use RedactURL / RedactText in
+        switcher/redact.go).
+    - path: "internal/forward/**"
+      instructions: |
+        Scanner-mode guarantees are a contract: a request that may have
+        reached the target must never be resent, and plain-HTTP requests
+        must not be rewritten in scanner mode. Any change here needs a test.
+        Scraper mode may retry only safe methods on 403, 429 and 5xx.
+        Check for request smuggling, hop-by-hop header leaks, SSRF through
+        CONNECT targets, unbounded reads and goroutine or connection leaks.
+    - path: "internal/admin/**"
+      instructions: |
+        /status must not expose proxy credentials. Check what the admin
+        listener binds to and that it stays loopback by default.
+    - path: "internal/config/**"
+      instructions: |
+        Config and env values can hold credentials. Make sure they are never
+        logged or echoed in errors. Check safe defaults.
+    - path: "**/*_test.go"
+      instructions: |
+        Tests must not touch the internet. Use httptest or the existing
+        fake proxies.
+    - path: "test/lab/**"
+      instructions: |
+        The lab target is deliberately vulnerable. Do not report its
+        vulnerabilities and do not suggest fixing them.
+    - path: ".github/workflows/**"
+      instructions: |
+        Keep CI in step with `make ci`. Pin actions to a full commit SHA or
+        a version, use least-privilege `permissions`, and never expose
+        secrets to pull requests from forks.
+
+  # Shown to CodeRabbit when it rates security and merge risk.
+  security_risk_instructions: |
+    proxyswitcher is a local forward proxy and Go library. By default it
+    listens on loopback. Upstream proxy URLs contain user:pass credentials.
+    The main risks are credential leaks (logs, errors, /status), the proxy
+    being exposed on a non-loopback address without auth, SSRF through
+    CONNECT or absolute-URI requests, and unsafe TLS settings.
+  merge_risk_instructions: |
+    Changes to switcher/ exported API, scanner-mode retry behaviour, and
+    credential redaction are high risk. Docs and test-only changes are low
+    risk.
+
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: "Use a conventional commit style title, e.g. 'fix: ...' or 'feat: ...'."
+    custom_checks:
+      - name: "No credentials in logs or output"
+        mode: error
+        instructions: |
+          Fail if the PR logs, prints, formats into an error, or returns a
+          proxy URL, password or token without RedactURL / RedactText from
+          switcher/redact.go. Fail if it adds a real credential, proxy
+          address or token to any tracked file. Pass otherwise.
+      - name: "Scanner-mode contract kept"
+        mode: error
+        instructions: |
+          Fail if the PR changes internal/forward/ or switcher/ so that, in
+          scanner mode, a request that may have reached the target is resent,
+          or a plain-HTTP request is rewritten, and it does not add a test
+          for that behaviour. Pass if the PR does not touch this behaviour.
+      - name: "Tests stay offline"
+        mode: warning
+        instructions: |
+          Fail if a new or changed test calls a real external host or the
+          internet instead of httptest or the fake proxies. Pass otherwise.
+      - name: "Public API stays stable"
+        mode: warning
+        instructions: |
+          Fail if the PR removes or changes the signature of an exported
+          identifier in switcher/ without saying so in the description.
+          Pass otherwise.
+
+  tools:
+    # Secrets
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    # Dependencies and infrastructure
+    osvScanner:
+      enabled: true
+    trivy:
+      enabled: true
+    checkov:
+      enabled: true
+    # Code
+    golangci-lint:
+      enabled: true
+    opengrep:
+      enabled: true
+    semgrep:
+      enabled: true
+    ast-grep:
+      enabled: true
+    # CI, Docker, shell, Makefile, docs
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    hadolint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    checkmake:
+      enabled: true
+    yamllint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    # Not used in this repo
+    ruff:
+      enabled: false
+    eslint:
+      enabled: false
+    biome:
+      enabled: false
+
+chat:
+  auto_reply: true
